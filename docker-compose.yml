@@ -1,0 +1,13 @@
+services:
+  telebridge:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - telebridge_data:/app/data
+    environment:
+      - LOGIN_PASSWORD=${LOGIN_PASSWORD:-TelebridgeAa@1}
+    restart: unless-stopped
+
+volumes:
+  telebridge_data:
