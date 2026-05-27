@@ -22,3 +22,4 @@ def get_secret_key() -> str:
 
 SECRET_KEY = get_secret_key()
 APP_URL = os.environ.get("APP_URL", "http://localhost:8000")
+LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "TelebridgeAa@1")

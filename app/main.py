@@ -7,7 +7,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth import validate_session, get_session_token
 from app.database import init_db
+from app.login_page import LOGIN_HTML
 from app.routes import rest_api
 from app.state import set_worker
 from app.workers.telegram import TelegramWorker
@@ -60,6 +62,7 @@ if FRONTEND_STATIC_DIR.exists():
         name="next_static",
     )
 
+app.include_router(rest_api.auth_router)
 app.include_router(rest_api.router)
 
 
@@ -72,7 +75,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/{rest:path}")
-async def serve_frontend(rest: str = ""):
+async def serve_frontend(request: Request, rest: str = ""):
+    token = get_session_token(request)
+    if not validate_session(token):
+        return HTMLResponse(LOGIN_HTML)
     key = rest or "index"
     if key in _frontend_html:
         return HTMLResponse(_frontend_html[key])

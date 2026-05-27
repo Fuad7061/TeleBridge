@@ -3,8 +3,13 @@ const BASE = '/api/v1'
 async function req<T>(url: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json', ...opts?.headers },
+    credentials: 'include',
     ...opts,
   })
+  if (res.status === 401) {
+    window.location.href = '/'
+    throw new Error('Unauthorized')
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw { status: res.status, ...body }
@@ -13,6 +18,12 @@ async function req<T>(url: string, opts?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    check: () => req<{ authenticated: boolean }>('/auth/check'),
+    login: (password: string) =>
+      req<{ ok: boolean }>('/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
+    logout: () => req<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+  },
   stats: () => req<any>('/stats'),
   accounts: {
     list: () => req<any>('/accounts'),

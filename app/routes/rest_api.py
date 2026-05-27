@@ -1,13 +1,51 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.auth import (
+    check_password, create_session, delete_session,
+    require_auth, get_session_token, validate_session, COOKIE_NAME,
+)
 from app.database import get_db
 from app.state import get_worker
 
-router = APIRouter(prefix="/api/v1")
+auth_router = APIRouter(prefix="/api/v1/auth")
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_auth)])
+
+
+class LoginRequest(BaseModel):
+    password: str
+
+
+@auth_router.post("/login")
+async def api_login(data: LoginRequest, request: Request):
+    if not check_password(data.password):
+        raise HTTPException(401, "Invalid password")
+    token = create_session()
+    response = JSONResponse({"ok": True})
+    response.set_cookie(
+        key=COOKIE_NAME, value=token, max_age=86400 * 7,
+        httponly=True, samesite="lax",
+    )
+    return response
+
+
+@auth_router.post("/logout")
+async def api_logout(request: Request):
+    token = get_session_token(request)
+    if token:
+        delete_session(token)
+    response = JSONResponse({"ok": True})
+    response.delete_cookie(COOKIE_NAME)
+    return response
+
+
+@auth_router.get("/check")
+async def api_auth_check(request: Request):
+    token = get_session_token(request)
+    return {"authenticated": validate_session(token)}
 
 
 # ─── Dashboard ──────────────────────────────────────────────────────────────

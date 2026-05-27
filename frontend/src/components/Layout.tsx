@@ -13,6 +13,13 @@ const navItems = [
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' })
+    } catch {}
+    window.location.href = '/'
+  }
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-56 bg-surface border-r border-border flex-shrink-0 p-6 flex flex-col">
@@ -20,7 +27,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <h1 className="text-xl font-bold text-primary">TeleBridge</h1>
           <p className="text-xs text-muted mt-0.5">Message Relay Hub</p>
         </div>
-        <nav className="flex flex-col gap-0.5">
+        <nav className="flex flex-col gap-0.5 flex-1">
           {navItems.map((item) => {
             const active = router.pathname === item.href || router.pathname.startsWith(item.href + '/')
             return (
@@ -39,6 +46,13 @@ export default function Layout({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-muted hover:bg-surface2 hover:text-red-400 transition-colors mt-auto"
+        >
+          <span className="w-4 text-center text-xs">⏻</span>
+          Logout
+        </button>
       </aside>
       <main className="flex-1 p-8 max-w-6xl overflow-x-auto">{children}</main>
     </div>
